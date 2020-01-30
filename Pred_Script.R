@@ -1,9 +1,15 @@
 ###Step 1### 
 ##Load workspace with Stan model fit.##
+
+##Load dataframe with future covariates.##
+Climfuture<-readRDS(file.path("future_precip_temp_sgs_test.rds")) 
+
+
 ###
 
-Iter<-#Number of MCMC interations
-Ns<-#Number of site (aka points)
+
+Iter<-500*1 #Number of MCMC interations* the number of chains
+Ns<-Nsite#Number of site (aka points)
 NySim<-#Number of simulation years in each scenario. 
 X<-#Array of covariates structured as years by site by covariate  
   

@@ -1,4 +1,4 @@
-SGS<-readRDS(file.path("sgs_covariates_for_regularization.rds")) 
+SGS<-readRDS(file.path("historical_precip_temp_sgs_test.rds")) 
 
 SGS<-as.data.frame(SGS)
 head(SGS)
@@ -6,11 +6,11 @@ head(SGS)
 
 attach(SGS)
 
-Y<-npp.x
-X<-cbind(mm.y,mm.dev,day_of_50_total_transp.y,transp.dev)
+Y<-npp
+X<-cbind(mm,temp)
 Xuns<-X
 X<-t((t(Xuns)-apply(Xuns,2,mean))/apply(Xuns,2,sd))
-X<-cbind(X,X[,1]*X[,2],X[,3]*X[,4])
+X<-cbind(X,X[,1]*X[,2])
 X<-cbind(1,X)
 
 b<-solve(t(X)%*%X)%*%t(X)%*%Y 
@@ -29,7 +29,7 @@ plot(Vout)
 
 
 plot(x[which(as.character(year)=="2015")],y[which(as.character(year)=="2015")], ylab="Lat", xlab="Long")
-knotloc<-expand.grid(seq(-105,-100,1),seq(31,43,1))
+knotloc<-expand.grid(seq(-105,-100,1.5),seq(31,43,1.5))
 points(knotloc[,1],knotloc[,2], col='red',pch=8)
 
 Nsite<-length(which(as.character(year)=="2015"))
@@ -39,6 +39,16 @@ colnames(siteloc)<-c("Long","Lat")
 colnames(knotloc)<-c("Long","Lat")
 d<-as.matrix(dist(rbind(siteloc,knotloc),upper=T,diag=T)) ### Find distance between all points and knots
 d<-d[-((Nsite+1):(Nsite+Nknot)),-(1:Nsite)]
+
+remKnot<-which((apply(d,2,min)>.5))
+knotloc<-knotloc[-remKnot,]
+Nknot<-length(knotloc[,1])
+d<-d[,-remKnot]
+
+plot(x[which(as.character(year)=="2015")],y[which(as.character(year)=="2015")], ylab="Lat", xlab="Long")
+points(knotloc[,1],knotloc[,2], col='red',pch=8)
+
+
 
 phi<-1.5/3 ###kernal bandwidth
 W<-exp(-d/phi)
@@ -54,9 +64,10 @@ int Nsy;//This is the number of site-years
 int Nk; //This is the number of knots
 int Ns; //This is the number of sites
 int Ny; //This is the number of years
+int par; //This is the number of covariates
 
 vector[Nsy] P; //This is all of the NPP measurments as a vector, length=Nsy
-matrix[Nsy,7] X; //This is a matrix of covariates Nsy by 2, 1 column is intercept and the second precip
+matrix[Nsy,par] X; //This is a matrix of covariates Nsy by 2, 1 column is intercept and the second precip
 
 matrix[Ns,Nk] K; //This is the K matrix that translates knots to sites. Remember this contains paramters, but we fixed thes based on our variogram analysis. 
 
@@ -67,7 +78,7 @@ int yrvec[Nsy] ; //This is a vector that will be helpful in assigning random eff
 }
 
 transformed data {
-  real m0 = 4;           // Expected number of large slopes
+  real m0 = 3;           // Expected number of large slopes
 real slab_scale = 3;    // Scale for large slopes
 real slab_scale2 = square(slab_scale);
 real slab_df = 25;      // Effective degrees of freedom for large slopes
@@ -75,27 +86,27 @@ real half_slab_df = 0.5 * slab_df;
 }
 
 parameters{
-vector[7] b_tilde; //This is a 2 length vector of all 
+vector[par] b_tilde; //This is a 2 length vector of all 
 real<lower=0> eps; // This is the random effects SD
 real<lower=0> sigma; //This is the SD on the process model
 vector[Nk] alpha; //This is a vector of random effects for each knots
 vector[Ny] alphaYr; //This is a vector of random effects for each year
 real<lower=0> sigmaYr; //This is the SD on the year random effects
 
-vector<lower=0>[7] lambda;
+vector<lower=0>[par] lambda;
   real<lower=0> c2_tilde;
 real<lower=0> tau_tilde;
 }
 
 transformed parameters {
-  vector[7] b;
+  vector[par] b;
 
-    real tau0 = (m0 / (7 - m0)) * (sigma / sqrt(1.0 * Nsy));
+    real tau0 = (m0 / (par - m0)) * (sigma / sqrt(1.0 * Nsy));
     real tau = tau0 * tau_tilde; // tau ~ cauchy(0, tau0);
 
     real c2 = slab_scale2 * c2_tilde;
 
-    vector[7] lambda_tilde =
+    vector[par] lambda_tilde =
     sqrt( c2 * square(lambda) ./ (c2 + square(tau) * square(lambda)) );
 
 
@@ -108,6 +119,7 @@ vector[Ns] Eta;
 
 mu=X*b ;
 Eta=K*alpha;
+
 
 alpha~normal(0,eps);
 
@@ -129,6 +141,8 @@ sigmaYr ~ cauchy(0, 1);
 "
 
 
-data=list("Nsy"=length(Y), 'yrvec'=as.numeric(as.character(year))-1985,"Ny"=length(unique(year)), "Ns"=Nsite, "Nk"=Nknot, "P"=Y, "X"=X, "K"=K, "sitevec"=rep(1:Nsite,each=30))
+data=list("par"=4,"Nsy"=length(Y), 'yrvec'=as.numeric(as.character(year))-1985,"Ny"=length(unique(year)), "Ns"=Nsite, "Nk"=Nknot, "P"=Y, "X"=X, "K"=K, "sitevec"=rep(1:Nsite,each=30))
 library(rstan)
-fit = stan(model_code=STmodel, data=data,chains=1,refresh = 1,control = list(max_treedepth = 12), sample_file = 'horseshoe.csv')
+fit = stan(model_code=STmodel, iter=1000, data=data,chains=1,refresh = 1,control = list(max_treedepth = 10), sample_file = 'horseshoe.csv')
+save.image("Testfit.Rdata")
+
