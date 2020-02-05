@@ -1,17 +1,23 @@
-SGS<-readRDS(file.path("historical_precip_temp_sgs_test.rds")) 
+###Set Path### 
+setwd('Google Drive/range-resilience/Sensitivity/projections/data/historical/cleaned')
 
-SGS<-as.data.frame(SGS)
+HistData<-readRDS(file.path("historical_npp_climate_for_projections.rds")) 
+
+SGS<-subset.data.frame(HistData,region=="shortgrass_steppe")
+SGS<-SGS[,-6]
 head(SGS)
 
 
 attach(SGS)
 
-Y<-npp
-X<-cbind(mm,temp)
+#Y<-npp
+X<-cbind(mm.mean,mm.dev,WatYrTEMP.mean,WatYrTEMP.dev)
 Xuns<-X
 X<-t((t(Xuns)-apply(Xuns,2,mean))/apply(Xuns,2,sd))
-X<-cbind(X,X[,1]*X[,2])
+X<-cbind(X,  X[,'mm.mean']*X[,'mm.dev']  ,   X[,'mm.dev']*X[,'mm.dev']   ,   X[,'mm.dev']*X[,'mm.dev']*X[,'mm.mean']  ,   X[,'WatYrTEMP.mean']*X[,'WatYrTEMP.dev']   ,  X[,'mm.dev']*X[,'WatYrTEMP.dev']  )
 X<-cbind(1,X)
+
+colnames(X)<-c('Intcpt','PMean','Pdev','Tmean','Tdev','Pmean*Pdev','Pdev2','Pdev2*Pmean','Tmean*Tdev','Pdev*Tdev')
 
 b<-solve(t(X)%*%X)%*%t(X)%*%Y 
 b
@@ -78,8 +84,8 @@ int yrvec[Nsy] ; //This is a vector that will be helpful in assigning random eff
 }
 
 transformed data {
-  real m0 = 3;           // Expected number of large slopes
-real slab_scale = 3;    // Scale for large slopes
+  real m0 = 3;           // Expected number of large slopes 
+real slab_scale = 3;    // Scale for large slopes //Threshold needed to pass to be considered important//
 real slab_scale2 = square(slab_scale);
 real slab_df = 25;      // Effective degrees of freedom for large slopes
 real half_slab_df = 0.5 * slab_df;
