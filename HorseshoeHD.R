@@ -2,12 +2,12 @@
 
 HistData<-readRDS(file.path("Google Drive/range-resilience/Sensitivity/projections/data/historical/cleaned/historical_npp_climate_for_projections.rds")) 
 
-SGS<-subset.data.frame(HistData,region=="shortgrass_steppe")
-SGS<-SGS[,-6]
-head(SGS)
+HD<-subset.data.frame(HistData,region=="hot_deserts")
+HD<-HD[,-6]
+head(HD)
 
 
-attach(SGS)
+attach(HD)
 
 Y<-npp
 X<-cbind(mm.mean,mm.dev,WatYrTEMP.mean,WatYrTEMP.dev)
@@ -29,11 +29,10 @@ Yresid<-(Y-Ypred) ###Calculate the residuals
 VarioData<-as.data.frame(cbind(Yresid,x,y))
 colnames(VarioData)<-c('Yresid','lat','long') 
 library(gstat) ###Needed for the variogram function
-Vout<-variogram(Yresid~1,loc=~lat+long, width=.1,data=VarioData) ###calculate a variogram using the data. this will take a few minutes if the full 
-plot(Vout)
-abline(v=2.3)
+Vout<-variogram(Yresid~1,loc=~lat+long, width=.1,data=VarioData) ###calculate a variogram using the data. this will take a few minutes if the full dataset
+plot(Vout, main="HD")
 
-phi<-2.5/3 ###kernal bandwidth---distance at which variogram stabalizes
+phi<-2/3 ###kernal bandwidth---distance at which variogram stabalizes
 
 
 
@@ -67,6 +66,6 @@ apply(K,2,sum)###check that all columns sum to 1
 
 data=list("par"=ncol(X),"Nsy"=length(Y), 'yrvec'=as.numeric(as.character(year))-1985,"Ny"=length(unique(year)), "Ns"=Nsite, "Nk"=Nknot, "P"=Y, "X"=X, "K"=K, "sitevec"=rep(1:Nsite,each=30))
 library(rstan)
-fit = stan('Google Drive/research/NPP_Model/Regularization_scripts/HSstan.stan', iter=1000, data=data,chains=1,refresh = 1,control = list(max_treedepth = 10), sample_file = 'horseshoe2.csv')
+fit = stan('Google Drive/research/NPP_Model/Regularization_scripts/HSstan.stan', iter=1000, data=data,chains=1,refresh = 1,control = list(max_treedepth = 10), sample_file = 'horseshoe.csv')
 save.image("Testfit.Rdata")
 

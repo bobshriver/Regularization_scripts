@@ -2,12 +2,12 @@
 
 HistData<-readRDS(file.path("Google Drive/range-resilience/Sensitivity/projections/data/historical/cleaned/historical_npp_climate_for_projections.rds")) 
 
-SGS<-subset.data.frame(HistData,region=="shortgrass_steppe")
-SGS<-SGS[,-6]
-head(SGS)
+NM<-subset.data.frame(HistData,region=="northern_mixed_prairies")
+NM<-NM[,-6]
+head(NM)
 
 
-attach(SGS)
+attach(NM)
 
 Y<-npp
 X<-cbind(mm.mean,mm.dev,WatYrTEMP.mean,WatYrTEMP.dev)
@@ -22,23 +22,22 @@ b<-solve(t(X)%*%X)%*%t(X)%*%Y ###Solve for th ML estimate of the regression para
 b
 
 Ypred<-X%*%b ###Predict the data using the MLE
-plot(Y,Ypred, cex=.01) ###Plot Predicted Vs. Observed
+plot(x,Yresid, cex=.01) ###Plot Predicted Vs. Observed
 abline(0,1)
 
 Yresid<-(Y-Ypred) ###Calculate the residuals 
 VarioData<-as.data.frame(cbind(Yresid,x,y))
 colnames(VarioData)<-c('Yresid','lat','long') 
 library(gstat) ###Needed for the variogram function
-Vout<-variogram(Yresid~1,loc=~lat+long, width=.1,data=VarioData) ###calculate a variogram using the data. this will take a few minutes if the full 
-plot(Vout)
-abline(v=2.3)
+Vout<-variogram(Yresid~1,loc=~lat+long, width=.1,data=VarioData) ###calculate a variogram using the data. this will take a few minutes if the full dataset
+plot(Vout, main="NM")
 
-phi<-2.5/3 ###kernal bandwidth---distance at which variogram stabalizes
+phi<-0.75/3 ###kernal bandwidth---distance at which variogram stabalizes
 
 
 
 plot(x[which(as.character(year)=="2015")],y[which(as.character(year)=="2015")], ylab="Lat", xlab="Long")###plot locations of all datapoints
-knotloc<-expand.grid(seq(-105,-100,2.5),seq(43,31,-2.5))
+knotloc<-expand.grid(seq(-115,-98,.75),seq(49,40,-.75))
 points(knotloc[,1],knotloc[,2], col='red',pch=8)
 
 Nsite<-length(which(as.character(year)=="2015"))
@@ -67,6 +66,6 @@ apply(K,2,sum)###check that all columns sum to 1
 
 data=list("par"=ncol(X),"Nsy"=length(Y), 'yrvec'=as.numeric(as.character(year))-1985,"Ny"=length(unique(year)), "Ns"=Nsite, "Nk"=Nknot, "P"=Y, "X"=X, "K"=K, "sitevec"=rep(1:Nsite,each=30))
 library(rstan)
-fit = stan('Google Drive/research/NPP_Model/Regularization_scripts/HSstan.stan', iter=1000, data=data,chains=1,refresh = 1,control = list(max_treedepth = 10), sample_file = 'horseshoe2.csv')
+fit = stan('Google Drive/research/NPP_Model/Regularization_scripts/HSstan.stan', iter=1000, data=data,chains=1,refresh = 1,control = list(max_treedepth = 10), sample_file = 'horseshoe.csv')
 save.image("Testfit.Rdata")
 
