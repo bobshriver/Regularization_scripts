@@ -61,7 +61,7 @@ mu=X*b ;
 Eta=K*(alpha*eps);
 
 
-alpha~normal(0,1);
+alpha~normal(0, 1);
 
 P~normal(mu+Eta[sitevec]+(alphaYr[yrvec]*sigmaYr),sigma);
 
