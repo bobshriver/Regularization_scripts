@@ -70,7 +70,7 @@ lambda ~ cauchy(0, 1);
 tau_tilde ~ cauchy(0, 1);
 c2_tilde ~ inv_gamma(half_slab_df, half_slab_df);
 
-alphaYr ~ cauchy(0, 1);
+alphaYr ~ normal(0, 1);
 sigmaYr ~ cauchy(0, 1);
 sigma ~ cauchy(0, 1);
 eps ~ cauchy(0, 1);
