@@ -58,10 +58,10 @@ vector[Nsy] mu;
 vector[Ns] Eta; 
 
 mu=X*b ;
-Eta=K*alpha;
+Eta=K*(alpha*eps);
 
 
-alpha~normal(0,eps);
+alpha~normal(0,1);
 
 P~normal(mu+Eta[sitevec]+(alphaYr[yrvec]*sigmaYr),sigma);
 
