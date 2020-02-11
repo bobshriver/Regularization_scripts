@@ -25,13 +25,13 @@ Ypred<-X%*%b ###Predict the data using the MLE
 plot(Y,Ypred, cex=.01) ###Plot Predicted Vs. Observed
 abline(0,1)
 
-Yresid<-(Y-Ypred) ###Calculate the residuals 
-VarioData<-as.data.frame(cbind(Yresid,x,y))
-colnames(VarioData)<-c('Yresid','lat','long') 
-library(gstat) ###Needed for the variogram function
-Vout<-variogram(Yresid~1,loc=~lat+long, width=.1,data=VarioData) ###calculate a variogram using the data. this will take a few minutes if the full 
-plot(Vout)
-abline(v=2.3)
+#Yresid<-(Y-Ypred) ###Calculate the residuals 
+#VarioData<-as.data.frame(cbind(Yresid,x,y))
+#colnames(VarioData)<-c('Yresid','lat','long') 
+#library(gstat) ###Needed for the variogram function
+#Vout<-variogram(Yresid~1,loc=~lat+long, width=.1,data=VarioData) ###calculate a variogram using the data. this will take a few minutes if the full 
+#plot(Vout)
+#abline(v=2.3)
 
 phi<-2.5/3 ###kernal bandwidth---distance at which variogram stabalizes
 
@@ -64,9 +64,9 @@ K<-t(t(W)/apply(W,2,sum)) ##normalize kernel ###"t" is the transpose which flips
 apply(K,2,sum)###check that all columns sum to 1
 
 
-
 data=list("par"=ncol(X),"Nsy"=length(Y), 'yrvec'=as.numeric(as.character(year))-1985,"Ny"=length(unique(year)), "Ns"=Nsite, "Nk"=Nknot, "P"=Y, "X"=X, "K"=K, "sitevec"=rep(1:Nsite,each=30))
 library(rstan)
-fit = stan('Google Drive/research/NPP_Model/Regularization_scripts/HSstan.stan', iter=1000, data=data,chains=1,refresh = 1,control = list(max_treedepth = 10), sample_file = 'horseshoe2.csv')
-save.image("Testfit.Rdata")
+options(mc.cores = parallel::detectCores())
+SGSfit = stan('Google Drive/research/NPP_Model/Regularization_scripts/HSstan.stan', iter=1000, data=data,chains=3,init=start,refresh = 1,control = list(max_treedepth = 12, adapt_delta=.95), sample_file = 'horseshoeSGS.csv')
+save.image("SGSfit.Rdata") ###Save workspace, not just model fit
 

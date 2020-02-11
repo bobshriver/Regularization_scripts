@@ -21,7 +21,7 @@ transformed data {
 real m0 = 6;           // Expected number of large slopes 
 real slab_scale = 3;    // Scale for large slopes //Threshold needed to pass to be considered important//
 real slab_scale2 = square(slab_scale);
-real slab_df = 1;      // Effective degrees of freedom for large slopes
+real slab_df = 5;      // Effective degrees of freedom for large slopes
 real half_slab_df = 0.5 * slab_df;
 }
 
@@ -70,10 +70,10 @@ lambda ~ cauchy(0, 1);
 tau_tilde ~ cauchy(0, 1);
 c2_tilde ~ inv_gamma(half_slab_df, half_slab_df);
 
-alphaYr ~ normal(0, 1);
-sigmaYr ~ cauchy(0, 5);
-sigma ~ cauchy(0, 5);
-eps ~ cauchy(0, 5);
+alphaYr ~ cauchy(0, 1);
+sigmaYr ~ cauchy(0, 1);
+sigma ~ cauchy(0, 1);
+eps ~ cauchy(0, 1);
 
 }
 
