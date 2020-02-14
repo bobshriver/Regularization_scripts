@@ -1,24 +1,46 @@
 ###Step 1### 
+
+# Set working directory to source file location 
+# (this method only works on Rstudio)
+#library(rstudioapi)
+#current_path <- getActiveDocumentContext()$path 
+#setwd(dirname(current_path )) # set working directory to location of this file
+
 ##Load workspace with Stan model fit.##
+load("./../data/future/by_scenario/covariates_sc")
 
-##Load dataframe with future covariates.##
-Climfuture<-readRDS(file.path("future_precip_temp_sgs_test.rds")) 
+# MAKE FILENAMES
+scenars <- c(1,seq(25,45,2)) # 1 is current, the others are all the RCP85, late century scenarios
 
+ecoregion <- "CaliforniaAnnual" # for example for 
 
-###
+for(i in scenars){
+  
+  #import covariates
+  infile <- paste0("./../data/future/by_scenario/covariates_sc",i,".csv")
+  future_covars <- read.csv(infile)
+  
 
+chains<-3
+Iter<-1500*chains #Number of MCMC interations* the number of chains
+Ns<-Nsite #Number of site (aka points)
+FYrs<-unique(future_covars$year)
+NySim<-length(FYrs)#Number of simulation years in each scenario. 
 
-Iter<-500*1 #Number of MCMC interations* the number of chains
-Ns<-Nsite#Number of site (aka points)
-NySim<-#Number of simulation years in each scenario. 
-X<-#Array of covariates structured as years by site by covariate  
+###########################
+###Add command to subset covariates by region and match sites####
+###########################
+spread(Covs,)
+X<- #Array of covariates 
+
+  
   
 ###Step 2###
 ##Extract Parameters
 alpha<-extract(fit,"alpha")$alpha ###Knot Random Effect
 beta<-extract(fit,"b")$b
-sigma2<-extract(fit,"sigma")$sigma ###Gaussian Process Error SD
-sigma2Y<-extract(fit,"sigmaYr")$sigmaYr ###Year Random Effect Error SD
+#sigma2<-extract(fit,"sigma")$sigma ###Gaussian Process Error SD
+#sigma2Y<-extract(fit,"sigmaYr")$sigmaYr ###Year Random Effect Error SD
 
 
 ###Notes on error structures in simulation###
@@ -44,16 +66,28 @@ Pred.out<-array(NA,c(Iter,NySim,Ns)) ###This is an array to store the prediction
 
 for (p in 1:Iter) { ##This is a loop over all of the different parameter sets from the posterior simualtion. This captures parameter uncertainty. Iter is the number of iterations during the model fitting
   
-YrRand<-rnorm(NySim,0,sigma2Y[p,]) ##Within each parameter set we want to draw a random effect of each year. NySim is the number of years the simualtion is for.  
-
-for (t in 1:NySim) { ###Within a given parameter set this simulates each year for each site
-  mu<-X[t,,]%*%beta[p,]+eta[p,] ###This is the key step it take a Ns*Np Matrix with covariates (X) and multiplies it by a Np vector of parameters (beta[p,]). We then add on the Spatial random effect for that parameter set (eta[p,]). 
+  ### I've removed year random effects from simualtion since these will be averaged over###
+  #YrRand<-rnorm(NySim,0,sigma2Y[p,]) ##Within each parameter set we want to draw a random effect of each year. NySim is the number of years the simualtion is for.  
+  ####
+  
+  mu<-X%*%beta[p,]+eta[p,] ###This is the key step it take a Ns*Np Matrix with covariates (X) and multiplies it by a Np vector of parameters (beta[p,]). We then add on the Spatial random effect for that parameter set (eta[p,]). 
   ###mu is a vector of Ns length
   ### If we are only interested in the mean NPP then we can save mu, but this doesn't included the process error
-  Pred.out[p,t,]<-rnorm(Ns,mu+YrRand[t],sigma2[p,]) ###Predicts the future NPP including the proccess uncertaintiy (i.e. sigma2 and sigma2Y)
+  Pred.out[p,]<-mu #rnorm(Ns,mu+YrRand[t],sigma2[p,]) ###Predicts the future NPP including the proccess uncertaintiy (i.e. sigma2 and sigma2Y)
 
-} ###End Time loop  
+
 } ###End Parameter loop  
+
+###Add colnames to file for site and year ####
+Pred.out<-rbind(FYrs,Pred.out)###append the year to the first row 
+colnames(Pred.out)<-rep() ####rep site names for 
+
+
+# write output to file...though maybe it will be .rds (arrays) instead of .csv?
+outfile <- paste0("./../output/",ecoregion,"/projected_npp_sc",i,".csv")
+write.csv(Pred.out, outfile, row.names = F)
+
+} ###End Scenario loop
 
 ###If we run multiple scenarios we can add an extra loop outside of the parameter loop for scenarios. At the end of each scenario we can run summary stats (i.e. mean and 95% CI) for each scenario and only save that to reduce memory required.
 
