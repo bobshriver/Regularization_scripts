@@ -21,7 +21,7 @@ transformed data {
 real m0 = 6;           // Expected number of large slopes 
 real slab_scale = 3;    // Scale for large slopes //Threshold needed to pass to be considered important//
 real slab_scale2 = square(slab_scale);
-real slab_df = 5;      // Effective degrees of freedom for large slopes
+real slab_df = 25;      // Effective degrees of freedom for large slopes
 real half_slab_df = 0.5 * slab_df;
 }
 
