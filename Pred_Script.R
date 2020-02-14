@@ -32,6 +32,7 @@ NySim<-length(FYrs)#Number of simulation years in each scenario.
 ###########################
 
 ####need vector to match sites in X with random effects
+SiteMatch<-
 
 ###need to find mean for each site, and create annual deviates for each pixel
 XfutUns<-
@@ -61,12 +62,8 @@ beta<-extract(fit,"b")$b
 ### Parameter uncertainty we have thousands of different parameter values. Each climate change scenario is run with every set of parameters
 
 
-###Step 3###
-###Because Eta (spatial random effects) are fixed across all years, it is fastest to simulate these once up front because matrix manipuations in R can be slow
-eta<-matrix(NA,Iter,Ns) ###Create a matrix to store site random effects  
 
-for (i in 1:Iter){eta[i,]<-K%*%alpha[i,]} ###This multiplies the knot effects from each itteration (alpha[i,]) by the distance decay matrix to calculate the random effect for each point.
-###
+
 
 ###Step 4###
 ##We now want to simulate over parameter posteriors, years, and site to simualte the full future dataset for one climate scenario
@@ -80,8 +77,8 @@ for (p in 1:Iter) { ##This is a loop over all of the different parameter sets fr
   ### I've removed year random effects from simualtion since these will be averaged over###
   #YrRand<-rnorm(NySim,0,sigma2Y[p,]) ##Within each parameter set we want to draw a random effect of each year. NySim is the number of years the simualtion is for.  
   ####
-  
-  mu<-Xfut%*%beta[p,]+eta[p,] ###This is the key step it take a Ns*Np Matrix with covariates (X) and multiplies it by a Np vector of parameters (beta[p,]). We then add on the Spatial random effect for that parameter set (eta[p,]). 
+  eta<-K%*%alpha[p,]
+  mu<-Xfut%*%beta[p,]+eta[SiteMatch] ###This is the key step it take a Ns*Np Matrix with covariates (X) and multiplies it by a Np vector of parameters (beta[p,]). We then add on the Spatial random effect for that parameter set (eta[p,]). 
   ###mu is a vector of Ns length
   ### If we are only interested in the mean NPP then we can save mu, but this doesn't included the process error
   Pred.out[,p]<-mu #rnorm(Ns,mu+YrRand[t],sigma2[p,]) ###Predicts the future NPP including the proccess uncertaintiy (i.e. sigma2 and sigma2Y)
