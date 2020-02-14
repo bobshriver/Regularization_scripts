@@ -12,7 +12,7 @@ load("./../data/future/by_scenario/covariates_sc")
 # MAKE FILENAMES
 scenars <- c(1,seq(25,45,2)) # 1 is current, the others are all the RCP85, late century scenarios
 
-ecoregion <- "CaliforniaAnnual" # for example for 
+ecoregion <- "california" # for example for 
 
 for(i in scenars){
   
@@ -30,8 +30,19 @@ NySim<-length(FYrs)#Number of simulation years in each scenario.
 ###########################
 ###Add command to subset covariates by region and match sites####
 ###########################
-spread(Covs,)
-X<- #Array of covariates 
+
+####need vector to match sites in X with random effects
+
+###need to find mean for each site, and create annual deviates for each pixel
+XfutUns<-
+  
+  
+Xfut<-t((t(Xfutuns)-apply(Xuns,2,mean))/apply(Xuns,2,sd))
+Xfut<-cbind(Xfut,  Xfut[,'mm.mean']*Xfut[,'mm.dev']  ,   Xfut[,'mm.dev']*Xfut[,'mm.dev']   ,   Xfut[,'mm.dev']*Xfut[,'mm.dev']*Xfut[,'mm.mean']  ,   Xfut[,'WatYrTEMP.mean']*Xfut[,'WatYrTEMP.dev']   ,  Xfut[,'mm.dev']*Xfut[,'WatYrTEMP.dev']  )
+Xfut<-cbind(1,Xfut)
+
+
+
 
   
   
@@ -62,7 +73,7 @@ for (i in 1:Iter){eta[i,]<-K%*%alpha[i,]} ###This multiplies the knot effects fr
 ##There are two ways to do this: 1) Vectorize years and sites and simulate the entire dataset in a single parameter loop, 2)Nest a time loop inside the parameter loop and vectorize only the sites
 ##The first approach will probably be faster, but let's start with #2 becuase it is easier to understand. 
 
-Pred.out<-array(NA,c(Iter,NySim,Ns)) ###This is an array to store the predictions from each 
+Pred.out<-matrix(NA,NySim*Ns,Iter) ###This is an array to store the predictions from each 
 
 for (p in 1:Iter) { ##This is a loop over all of the different parameter sets from the posterior simualtion. This captures parameter uncertainty. Iter is the number of iterations during the model fitting
   
@@ -70,17 +81,17 @@ for (p in 1:Iter) { ##This is a loop over all of the different parameter sets fr
   #YrRand<-rnorm(NySim,0,sigma2Y[p,]) ##Within each parameter set we want to draw a random effect of each year. NySim is the number of years the simualtion is for.  
   ####
   
-  mu<-X%*%beta[p,]+eta[p,] ###This is the key step it take a Ns*Np Matrix with covariates (X) and multiplies it by a Np vector of parameters (beta[p,]). We then add on the Spatial random effect for that parameter set (eta[p,]). 
+  mu<-Xfut%*%beta[p,]+eta[p,] ###This is the key step it take a Ns*Np Matrix with covariates (X) and multiplies it by a Np vector of parameters (beta[p,]). We then add on the Spatial random effect for that parameter set (eta[p,]). 
   ###mu is a vector of Ns length
   ### If we are only interested in the mean NPP then we can save mu, but this doesn't included the process error
-  Pred.out[p,]<-mu #rnorm(Ns,mu+YrRand[t],sigma2[p,]) ###Predicts the future NPP including the proccess uncertaintiy (i.e. sigma2 and sigma2Y)
+  Pred.out[,p]<-mu #rnorm(Ns,mu+YrRand[t],sigma2[p,]) ###Predicts the future NPP including the proccess uncertaintiy (i.e. sigma2 and sigma2Y)
 
 
 } ###End Parameter loop  
 
 ###Add colnames to file for site and year ####
 Pred.out<-rbind(FYrs,Pred.out)###append the year to the first row 
-colnames(Pred.out)<-rep() ####rep site names for 
+rownames(Pred.out)<-rep() ####rep site names for 
 
 
 # write output to file...though maybe it will be .rds (arrays) instead of .csv?
