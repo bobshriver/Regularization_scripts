@@ -82,6 +82,7 @@ Xfut<-cbind(1,Xfut)
 ##Extract Parameters
 alpha<-extract(fit,"alpha")$alpha ###Knot Random Effect
 beta<-extract(fit,"b")$b
+eps<-extract(fit,"eps")$eps
 #sigma2<-extract(fit,"sigma")$sigma ###Gaussian Process Error SD
 #sigma2Y<-extract(fit,"sigmaYr")$sigmaYr ###Year Random Effect Error SD
 
@@ -108,7 +109,7 @@ for (p in 1:Iter) { ##This is a loop over all of the different parameter sets fr
   ### I've removed year random effects from simualtion since these will be averaged over###
   #YrRand<-rnorm(NySim,0,sigma2Y[p,]) ##Within each parameter set we want to draw a random effect of each year. NySim is the number of years the simualtion is for.  
   ####
-  eta<-K%*%alpha[p,]
+  eta<-K%*%(alpha[p,]*eps[p])
   mu<-Xfut%*%beta[p,]+eta[SiteMatch] ###This is the key step it take a Ns*Np Matrix with covariates (X) and multiplies it by a Np vector of parameters (beta[p,]). We then add on the Spatial random effect for that parameter set (eta[p,]). 
   ###mu is a vector of Ns length
   ### If we are only interested in the mean NPP then we can save mu, but this doesn't included the process error
