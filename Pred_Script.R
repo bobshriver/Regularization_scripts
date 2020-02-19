@@ -61,9 +61,9 @@ sitemeanPFut<-aggregate((future_covars[,3]*10)~future_covars[,1],FUN=mean)[,2]
 sitemeanTFut<-aggregate(future_covars[,4]~future_covars[,1],FUN=mean)[,2]
 
 future_covars$mm.mean<-rep(sitemeanPFut,each=NySim)
-future_covars$mm.dev<-(future_covars$WatYrPRECIP*10)/sitemeanP[SiteMatch] ###get future deviations from the historic mean ###convert future values from cm to mm
+future_covars$mm.dev<-(future_covars$WatYrPRECIP*10)-sitemeanPHist[SiteMatch] ###get future deviations from the historic mean ###convert future values from cm to mm
 future_covars$WatYrTEMP.mean<-rep(sitemeanTFut,each=NySim)
-future_covars$WatYrTEMP.dev<-(future_covars$WatYrTEMP)/sitemeanT[SiteMatch] ###get future deviations from the historic mean
+future_covars$WatYrTEMP.dev<-(future_covars$WatYrTEMP)-sitemeanTHist[SiteMatch] ###get future deviations from the historic mean
 
 
 Xfutuns<-future_covars[,c('mm.mean','mm.dev','WatYrTEMP.mean','WatYrTEMP.dev')]###Extract future covs in a way that matches historic data
