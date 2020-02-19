@@ -118,7 +118,7 @@ for (p in 1:Iter) { ##This is a loop over all of the different parameter sets fr
 } ###End Parameter loop  
 
 ###Add colnames to file for site and year ####
-Pred.out<-rbind(FYrs,Pred.out)###append the year to the first row 
+Pred.out<-rbind(future_covars$year,Pred.out)###append the year to the first row 
 rownames(Pred.out)<-future_covars$site ####rep site names for 
 
 
