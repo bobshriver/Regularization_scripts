@@ -67,6 +67,6 @@ begin<-list(list('b'=c(b)),list('b'=c(b)),list('b'=c(b)))
 data=list("par"=ncol(X),"Nsy"=length(Y), 'yrvec'=as.numeric(as.character(year))-1985,"Ny"=length(unique(year)), "Ns"=Nsite, "Nk"=Nknot, "P"=Y, "X"=X, "K"=K, "sitevec"=rep(1:Nsite,each=30))
 library(rstan)
 options(mc.cores = parallel::detectCores())
-HDfit= stan('Google Drive/research/NPP_Model/Regularization_scripts/GAUSstan.stan', iter=3000, data=data,chains=3,refresh = 1,control = list(max_treedepth = 10, adapt_delta=.8), sample_file = 'GausHD.csv')
+HDfit= stan('Google Drive/research/NPP_Model/Regularization_scripts/GAUSstan.stan',init=begin, iter=3000, data=data,chains=3,refresh = 1,control = list(max_treedepth = 10, adapt_delta=.8), sample_file = 'GausHD.csv')
 save.image("HDfitGaus.Rdata")  ###Save the whole workspace, not just model fit
 
