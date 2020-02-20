@@ -43,7 +43,7 @@ alpha~normal(0, 1);
 
 P~normal(mu+Eta[sitevec]+(alphaYr[yrvec]*sigmaYr),sigma);
 
-b ~ normal(0, 1);
+b ~ normal(0, 100);
 
 alphaYr ~ normal(0, 1);
 sigmaYr ~ cauchy(0, 1);
