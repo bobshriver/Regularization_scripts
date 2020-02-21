@@ -9,17 +9,17 @@ library(dplyr)
 #setwd(dirname(current_path )) # set working directory to location of this file
 
 ##Load workspace with Stan model fit.##
-load("./../parameters/cali_annualsCAfit_fourthrun.Rdata")
+load(fit_file) # declared in wrapper
 
 # MAKE FILENAMES
 scenars <- c(1,seq(25,45,2)) # 1 is current, the others are all the RCP85, late century scenarios
 
-ecoregion <- "CA" #name of ecoregion: CA, SGS, CD, NM, HD
+ecoregion <- region # declared in wrapper
 
 ###These lines make sure the model fit data match what the region specified is
 if (ecoregion=="CA"){HistData=CA;fit=CAfit}
 if (ecoregion=="CD"){HistData=CD;fit=CDfit}
-if (ecoregion=="SGS"){HistData=SGS;fit=SGSfit}
+if (ecoregion=="SGS"){HistData=SGS;fit=fit} # {HistData=SGS;fit=SGSfit}
 if (ecoregion=="NM"){HistData=NM;fit=NMfit}
 if (ecoregion=="HD"){HistData=HD;fit=HDfit}
 
